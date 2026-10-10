@@ -87,7 +87,7 @@ export default async function Teacher({ searchParams }: { searchParams: Promise<
         <div className="notice">
           {db.kind === "temporary"
             ? "⚠️ No hay base de datos conectada: las respuestas se pierden. En Vercel, agrega Upstash Redis en Storage y vuelve a desplegar."
-            : "Modo local: las respuestas se guardan en .data/submissions.json."}
+            : "Modo local: las respuestas se guardan en un archivo de este equipo."}
         </div>
       )}
 

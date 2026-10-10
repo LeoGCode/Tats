@@ -52,4 +52,18 @@ or `REDIS_URL`, whichever the integration provides.
 npm install
 npm run dev      # http://localhost:3000 (saves to .data/submissions.json)
 npm test         # grader test cases
+npm run e2e      # Playwright end-to-end tests (builds and starts the app on port 3100)
+npm run showcase # same tests, slowed down and recorded as video in test-results/
 ```
+
+The end-to-end tests tell one story:
+
+1. **`e2e/student.spec.ts`** (phone, Pixel 7): María López types her name, plays a listening sentence, answers
+   all 50 questions with the typical mistakes of a Spanish speaker, and submits. She checks her score, then
+   steps through all 12 mistakes and their Spanish explanations.
+2. **`e2e/teacher.spec.ts`** (laptop): 14 more classmates submit through the API, for 15 students in total.
+   The teacher dashboard is then checked: the summary tiles, the charts by topic and by question, the
+   most common wrong answers, the student table, and María's review opened from it.
+
+Each run starts with an empty class (in `.data-e2e/`). The classmates' answers are generated with a fixed seed in
+`e2e/students.ts`, so the dashboard looks the same every time.

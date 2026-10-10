@@ -113,7 +113,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: string; onC
       <div className={`options${["E", "F"].includes(q.section) ? " row" : q.section === "D" ? " letters" : ""}`} role="radiogroup">
         {q.options.map((o) => (
           <label key={o.key} className="opt">
-            <input type="radio" name={q.id} checked={value === o.key} onChange={() => onChange(o.key)} />
+            <input type="radio" name={q.id} value={o.key} checked={value === o.key} onChange={() => onChange(o.key)} />
             {/* Section D lists the answers once above; each question only picks a letter. */}
             <span>{q.section === "D" ? <b>{o.key}</b> : <>{showKey && <b>{o.key}. </b>}{o.text}</>}</span>
           </label>

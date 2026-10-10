@@ -74,7 +74,7 @@ async function urlStore(url: string): Promise<Store> {
 
 /** Local JSON file for development. On Vercel it lives in /tmp and does not persist. */
 function fileStore(): Store {
-  const dir = process.env.VERCEL ? "/tmp" : path.join(process.cwd(), ".data");
+  const dir = process.env.DATA_DIR ?? (process.env.VERCEL ? "/tmp" : path.join(process.cwd(), ".data"));
   const file = path.join(dir, "submissions.json");
   const read = async (): Promise<Record<string, Submission>> => {
     try {
