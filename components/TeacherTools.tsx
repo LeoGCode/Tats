@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Check, Copy, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Check, Copy, LoaderCircle, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function CopyLink({ url }: { url: string }) {
@@ -24,24 +24,39 @@ export function CopyLink({ url }: { url: string }) {
   );
 }
 
+/** Two taps instead of a browser dialog: the first arms it for a few seconds, the second deletes. */
 export function DeleteButton({ id, name, teacherKey }: { id: string; name: string; teacherKey?: string }) {
   const router = useRouter();
+  const [armed, setArmed] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  async function onClick() {
+    if (!armed) return setArmed(true);
+    setBusy(true);
+    await fetch("/api/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, key: teacherKey }),
+    });
+    router.refresh();
+  }
+
   return (
     <button
-      className="btn small icon"
-      aria-label={`Borrar el examen de ${name}`}
-      title="Borrar"
-      onClick={async () => {
-        if (!confirm(`¿Borrar el examen de ${name}?`)) return;
-        await fetch("/api/delete", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, key: teacherKey }),
-        });
-        router.refresh();
-      }}
+      className={`btn small${armed ? " danger" : " icon"}`}
+      aria-label={armed ? `Confirmar: borrar el examen de ${name}` : `Borrar el examen de ${name}`}
+      onClick={onClick}
+      disabled={busy}
+      aria-busy={busy}
     >
-      <Trash2 aria-hidden size={16} />
+      {busy ? <LoaderCircle aria-hidden size={16} className="spin" /> : <Trash2 aria-hidden size={16} />}
+      {armed && !busy && "Borrar"}
     </button>
   );
 }

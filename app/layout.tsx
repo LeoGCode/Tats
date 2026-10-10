@@ -3,7 +3,7 @@ import "@fontsource/atkinson-hyperlegible-next/400.css";
 import "@fontsource/atkinson-hyperlegible-next/400-italic.css";
 import "@fontsource/atkinson-hyperlegible-next/700.css";
 import "@fontsource/atkinson-hyperlegible-next/800.css";
-import "@fontsource-variable/fraunces";
+import "@fontsource/barlow-semi-condensed/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,8 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f2ea" },
-    { media: "(prefers-color-scheme: dark)", color: "#141311" },
+    { media: "(prefers-color-scheme: light)", color: "#e9ebee" },
+    { media: "(prefers-color-scheme: dark)", color: "#111214" },
   ],
 };
 

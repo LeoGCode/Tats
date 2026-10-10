@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, ChevronRight, PencilLine, QrCode, RefreshCw, X } from "lucide-react";
+import { ArrowRight, Check, ChevronRight, PencilLine, QrCode, RefreshCw, TriangleAlert, X } from "lucide-react";
 import { StackedBars } from "./Bars.tsx";
 import { CopyLink, DeleteButton } from "./TeacherTools.tsx";
 
@@ -78,8 +78,11 @@ function QuestionRow({ q, n }: { q: QuestionStat; n: number }) {
       </summary>
       <div className="qbody">
         <div><span className="muted">Correcta:</span> <b className="right">{q.correct}</b></div>
-        <div className="small muted">
-          {e} de {n} con error · {q.wrong} incorrectas · {q.spelling} ortografía · {q.blank} en blanco
+        <div className="small muted stats wrap-stats">
+          <span><b className="ink">{e} de {n}</b>&nbsp;con error</span>
+          <span>{q.wrong} incorrectas</span>
+          <span>{q.spelling} ortografía</span>
+          <span>{q.blank} en blanco</span>
         </div>
         {q.common.length > 0 && (
           <div className="answers">
@@ -160,9 +163,10 @@ export default function Dashboard({ data }: { data: DashboardData }) {
 
       <main className="wrap dash">
         {data.storeKind !== "redis" && (
-          <div className="notice">
+          <div className="notice alert-inline" role="status">
+            <TriangleAlert aria-hidden size={18} style={{ flex: "none" }} />
             {data.storeKind === "temporary"
-              ? "⚠️ No hay base de datos conectada: las respuestas se pierden. En Vercel, agrega Upstash Redis en Storage y vuelve a desplegar."
+              ? "No hay base de datos conectada: las respuestas se pierden. En Vercel, agrega Upstash Redis en Storage y vuelve a desplegar."
               : "Modo local: las respuestas se guardan en un archivo de este equipo."}
           </div>
         )}
@@ -226,7 +230,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                   <div className="qlist">
                     {byErrors.slice(0, 5).filter((q) => errors(q) > 0).map((q) => <QuestionRow key={q.id} q={q} n={n} />)}
                   </div>
-                  <button className="btn small" style={{ marginTop: 12 }} onClick={() => go("preguntas")}>Ver todas las preguntas →</button>
+                  <button className="btn small" style={{ marginTop: 12 }} onClick={() => go("preguntas")}>Ver todas las preguntas <ArrowRight aria-hidden size={16} /></button>
                 </section>
               </>
             )}
@@ -249,7 +253,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
             {n === 0 ? (
               <p className="muted">Todavía no hay exámenes.</p>
             ) : shownQuestions.length === 0 ? (
-              <p>¡Nadie ha fallado ninguna pregunta!</p>
+              <p>Nadie ha fallado ninguna pregunta.</p>
             ) : (
               <div className="qlist">{shownQuestions.map((q) => <QuestionRow key={q.id} q={q} n={n} />)}</div>
             )}

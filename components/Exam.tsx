@@ -3,16 +3,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes } from "react";
 import { useRouter } from "next/navigation";
 import { QUESTIONS, SECTIONS, type ChoiceQuestion, type Question } from "@/lib/exam.ts";
-import { ArrowRight, LoaderCircle, Send, Snail, Volume2 } from "lucide-react";
+import { ArrowRight, LoaderCircle, RotateCw, Send, Snail, Volume2 } from "lucide-react";
 import { Figure } from "./Figures.tsx";
 
 const DRAFT_KEY = "midterm-draft-v1";
 
-function speak(text: string, rate: number) {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    alert("Tu navegador no puede leer en voz alta. Pide al profesor que lea la oración.");
-    return;
-  }
+/** Reads the sentence aloud. Returns false when this browser has no voice. */
+function speak(text: string, rate: number): boolean {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   const synth = window.speechSynthesis;
   synth.cancel();
   const u = new SpeechSynthesisUtterance(text);
@@ -21,18 +19,26 @@ function speak(text: string, rate: number) {
   const voice = synth.getVoices().find((v) => v.lang.startsWith("en-US")) ?? synth.getVoices().find((v) => v.lang.startsWith("en"));
   if (voice) u.voice = voice;
   synth.speak(u);
+  return true;
 }
 
 function Listen({ text }: { text: string }) {
+  const [unsupported, setUnsupported] = useState(false);
+  const play = (rate: number) => setUnsupported(!speak(text, rate));
   return (
-    <div className="listen">
-      <button type="button" className="btn listen-btn" onClick={() => speak(text, 0.9)} aria-label="Escuchar">
-        <Volume2 aria-hidden size={18} /> Listen
-      </button>
-      <button type="button" className="btn listen-btn" onClick={() => speak(text, 0.6)} aria-label="Escuchar despacio">
-        <Snail aria-hidden size={18} /> Slow
-      </button>
-    </div>
+    <>
+      <div className="listen">
+        <button type="button" className="btn listen-btn" onClick={() => play(0.9)} aria-label="Escuchar">
+          <Volume2 aria-hidden size={18} /> Listen
+        </button>
+        <button type="button" className="btn listen-btn" onClick={() => play(0.6)} aria-label="Escuchar despacio">
+          <Snail aria-hidden size={18} /> Slow
+        </button>
+      </div>
+      {unsupported && (
+        <p className="listen-note" role="status">Este navegador no puede leer en voz alta. Pide al profesor que lea la oración.</p>
+      )}
+    </>
   );
 }
 
@@ -74,7 +80,7 @@ const joinAfter = (after: string) => (/^[.,?!]/.test(after) ? after : ` ${after}
 function QuestionInput({ q, value, onChange }: { q: Question; value: string; onChange: (v: string) => void }) {
   const label = `Question ${q.section}${q.num}`;
   return (
-    <div className="q">
+    <div className="q" id={`q-${q.id}`}>
       <span className="num" aria-hidden>{q.num}</span>
       <div className="q-body">
         {q.speak && <Listen text={q.speak} />}
@@ -151,6 +157,7 @@ export default function Exam() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     try {
@@ -169,9 +176,24 @@ export default function Exam() {
 
   const answered = useMemo(() => QUESTIONS.filter((q) => (answers[q.id] ?? "").trim()).length, [answers]);
 
-  async function submit() {
-    const missing = QUESTIONS.length - answered;
-    if (missing > 0 && !confirm(`Te faltan ${missing} pregunta(s). ¿Quieres entregar de todos modos?`)) return;
+  const missing = QUESTIONS.length - answered;
+
+  function goToFirstBlank() {
+    setConfirming(false);
+    const q = QUESTIONS.find((x) => !(answers[x.id] ?? "").trim());
+    const el = q && document.getElementById(`q-${q.id}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.querySelector<HTMLInputElement>("input:not([type=radio])")?.focus({ preventScroll: true });
+  }
+
+  async function submit(force = false) {
+    // With blanks left, the first tap asks inside the bar instead of a browser dialog.
+    if (missing > 0 && !force) {
+      setConfirming(true);
+      return;
+    }
+    setConfirming(false);
     setSending(true);
     setError("");
     try {
@@ -187,7 +209,7 @@ export default function Exam() {
       } catch {}
       router.push(`/review/${data.id}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo enviar. Intenta otra vez.");
+      setError(e instanceof Error && e.message !== "Error" ? e.message : "No se pudo entregar. Revisa tu conexión.");
       setSending(false);
     }
   }
@@ -262,20 +284,41 @@ export default function Exam() {
             <Figure kind={s.figure} />
             <div className="questions">
               {QUESTIONS.filter((q) => q.section === s.id).map((q) => (
-                <QuestionInput key={q.id} q={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} />
+                <QuestionInput key={q.id} q={q} value={answers[q.id] ?? ""} onChange={(v) => {
+                    setConfirming(false);
+                    setAnswers((a) => ({ ...a, [q.id]: v }));
+                  }} />
               ))}
             </div>
           </section>
         ))}
-        {error && <div className="notice" role="alert">{error}</div>}
       </main>
       <div className="sticky-bar">
-        <div className="inner">
-          <span className="count" aria-label={`${answered} of ${QUESTIONS.length} answered`}>{answered}/{QUESTIONS.length}</span>
-          <div className="progress" aria-hidden><div style={{ width: `${(answered / QUESTIONS.length) * 100}%` }} /></div>
-          <button className="btn primary" onClick={submit} disabled={sending}>
-            {sending ? <><LoaderCircle aria-hidden size={16} className="spin" /> Enviando…</> : <>Finish / Entregar <Send aria-hidden size={16} /></>}
-          </button>
+        <div className="inner" aria-live="polite">
+          {confirming ? (
+            <>
+              <p className="bar-message"><b>Te faltan {missing} {missing === 1 ? "pregunta" : "preguntas"}</b>¿Entregar de todos modos?</p>
+              <div className="bar-actions">
+                <button className="btn" onClick={goToFirstBlank}>Ir a la primera</button>
+                <button className="btn primary" onClick={() => submit(true)}>Entregar</button>
+              </div>
+            </>
+          ) : error ? (
+            <>
+              <p className="bar-message bar-error" role="alert"><b>No se entregó</b>{error}</p>
+              <button className="btn primary" onClick={() => submit(true)}><RotateCw aria-hidden size={16} /> Reintentar</button>
+            </>
+          ) : (
+            <>
+              <span className="count" aria-label={`${answered} of ${QUESTIONS.length} answered`}>{answered}/{QUESTIONS.length}</span>
+              <div className={`progress${missing === 0 ? " done" : ""}`} aria-hidden>
+                <div style={{ transform: `scaleX(${answered / QUESTIONS.length})` }} />
+              </div>
+              <button className="btn primary submit-btn" onClick={() => submit()} disabled={sending} aria-busy={sending}>
+                {sending ? <><LoaderCircle aria-hidden size={16} className="spin" /> Enviando…</> : <>Finish / Entregar <Send aria-hidden size={16} /></>}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>

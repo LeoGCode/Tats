@@ -63,4 +63,16 @@ test.describe("student", () => {
       await expect(page.getByRole("heading", { name: `Resultados de ${STUDENT}` })).toBeVisible();
     });
   });
+
+  test("is asked inside the bar before submitting with blanks", async ({ page }) => {
+    await page.goto("/");
+    await page.getByLabel("Your name / Tu nombre").fill("Pedro");
+    await page.getByRole("button", { name: "Start / Empezar" }).click();
+    await page.getByLabel("Question A2", { exact: true }).fill("dictionary");
+    await page.getByRole("button", { name: "Finish / Entregar" }).click();
+    await expect(page.locator(".sticky-bar")).toContainText("Te faltan 49 preguntas");
+    await page.getByRole("button", { name: "Ir a la primera" }).click();
+    await expect(page.getByLabel("Question A1", { exact: true })).toBeFocused();
+    await expect(page.locator(".sticky-bar")).toContainText("1/50");
+  });
 });
