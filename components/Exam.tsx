@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes } from "react";
 import { useRouter } from "next/navigation";
 import { QUESTIONS, SECTIONS, type ChoiceQuestion, type Question } from "@/lib/exam.ts";
 import { Figure } from "./Figures.tsx";
@@ -31,6 +31,36 @@ function Listen({ text }: { text: string }) {
   );
 }
 
+/**
+ * A text field the phone keyboard won't correct or suggest words for.
+ * autoCorrect / spellCheck alone are ignored by Gboard, but Chromium tells the keyboard a field is a
+ * "visible password" once it has ever been type=password, and keyboards then turn off suggestions,
+ * autocorrect and learning. So we flip the type to password and straight back to text on mount.
+ */
+function PlainInput(props: InputHTMLAttributes<HTMLInputElement>) {
+  const ref = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.type = "password";
+    el.type = "text";
+  }, []);
+  return (
+    <input
+      ref={ref}
+      type="text"
+      autoCapitalize="off"
+      autoComplete="off"
+      autoCorrect="off"
+      spellCheck={false}
+      data-lpignore="true"
+      data-1p-ignore="true"
+      data-form-type="other"
+      {...props}
+    />
+  );
+}
+
 function QuestionInput({ q, value, onChange }: { q: Question; value: string; onChange: (v: string) => void }) {
   if (q.kind === "text") {
     const long = q.section === "J";
@@ -41,15 +71,10 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: string; onC
           {q.speak && <Listen text={q.speak} />}
           {q.before && <span>{q.before}</span>}
           <span style={{ display: "inline-flex", flexDirection: "column" }}>
-            <input
-              type="text"
+            <PlainInput
               className={`blank${long ? " long" : ""}`}
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              autoCapitalize="off"
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
               aria-label={`Question ${q.section}${q.num}`}
             />
             {q.hint && <span className="hint">({q.hint})</span>}
@@ -66,12 +91,10 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: string; onC
           <span className="num">{q.num}.</span>
           <span>{q.prompt}</span>
         </div>
-        <textarea
-          rows={1}
+        <PlainInput
+          className="sentence"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          spellCheck={false}
-          autoCorrect="off"
           placeholder="Write a complete sentence."
           aria-label={`Question ${q.section}${q.num}`}
         />

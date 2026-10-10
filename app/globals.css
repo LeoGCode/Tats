@@ -113,7 +113,7 @@ input[type="text"], textarea {
   border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 10px;
 }
 input[type="text"]:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
-textarea { width: 100%; resize: vertical; min-height: 44px; }
+input.sentence { width: 100%; }
 
 .q { padding: 12px 0; border-top: 1px dashed var(--border); }
 .q:first-of-type { border-top: 0; }
