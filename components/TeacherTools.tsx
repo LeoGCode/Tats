@@ -1,16 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-export function AutoRefresh({ seconds }: { seconds: number }) {
-  const router = useRouter();
-  useEffect(() => {
-    const t = setInterval(() => router.refresh(), seconds * 1000);
-    return () => clearInterval(t);
-  }, [router, seconds]);
-  return null;
-}
 
 export function CopyLink({ url }: { url: string }) {
   const [done, setDone] = useState(false);
@@ -36,7 +27,9 @@ export function DeleteButton({ id, name, teacherKey }: { id: string; name: strin
   const router = useRouter();
   return (
     <button
-      className="btn small"
+      className="btn small icon"
+      aria-label={`Borrar el examen de ${name}`}
+      title="Borrar"
       onClick={async () => {
         if (!confirm(`¿Borrar el examen de ${name}?`)) return;
         await fetch("/api/delete", {
@@ -47,7 +40,7 @@ export function DeleteButton({ id, name, teacherKey }: { id: string; name: strin
         router.refresh();
       }}
     >
-      Borrar
+      🗑
     </button>
   );
 }

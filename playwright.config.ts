@@ -3,7 +3,6 @@ import { defineConfig, devices } from "@playwright/test";
 const PORT = 3100;
 // SHOWCASE=1 slows every action down and records video, for demos.
 const showcase = !!process.env.SHOWCASE;
-const desktop = { width: 1280, height: 800 };
 const video = (size: { width: number; height: number }) =>
   showcase ? { mode: "on" as const, size } : ("retain-on-failure" as const);
 
@@ -25,7 +24,7 @@ export default defineConfig({
       name: "teacher",
       testMatch: "teacher.spec.ts",
       dependencies: ["student"],
-      use: { ...devices["Desktop Chrome"], viewport: desktop, video: video(desktop) },
+      use: { ...devices["Pixel 7"], video: video(devices["Pixel 7"].viewport) },
     },
   ],
   webServer: {

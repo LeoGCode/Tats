@@ -5,9 +5,13 @@ An online version of the Ventures Level 1 midterm, sections A–J (50 questions)
 - **Students** open `/`, type their name and answer every question. When they submit, they see their score. Then
   they step through each mistake one at a time, with an explanation in Spanish. Where it helps, they also see
   how the wrong answer would sound in Spanish (for example, *“Does he from Russia?” suena como “¿Hace él de Rusia?”*).
-- **The teacher** opens `/teacher` to see a summary: number of tests, the average, the hardest question and
-  topic, charts of errors **by topic** and **by question**, the most common wrong answers, and each student's
-  results.
+- **The teacher** opens `/teacher` on their phone. It has three tabs:
+  - **Resumen**: the student link and a QR code to show the class, the totals, errors by topic, and the 5 hardest
+    questions.
+  - **Preguntas**: every question with its error rate. Tap one to see the correct answer and what students wrote.
+  - **Estudiantes**: a card per student with their score, sorted by most recent, score or name. Tap a card to open
+    their test with the explanations.
+  The dashboard refreshes every 30 seconds, and there is also a button to refresh it.
 
 There are no accounts: there is one link for students and one for the teacher.
 
@@ -61,9 +65,9 @@ The end-to-end tests tell one story:
 1. **`e2e/student.spec.ts`** (phone, Pixel 7): María López types her name, plays a listening sentence, answers
    all 50 questions with the typical mistakes of a Spanish speaker, and submits. She checks her score, then
    steps through all 12 mistakes and their Spanish explanations.
-2. **`e2e/teacher.spec.ts`** (laptop): 14 more classmates submit through the API, for 15 students in total.
-   The teacher dashboard is then checked: the summary tiles, the charts by topic and by question, the
-   most common wrong answers, the student table, and María's review opened from it.
+2. **`e2e/teacher.spec.ts`** (phone): 14 more classmates submit through the API, for 15 students in total.
+   The teacher dashboard is then checked: the QR code, the summary tiles, the chart of errors by topic, one
+   question opened to see the wrong answers, the 15 students sorted by score, and María's test opened from her card.
 
 Each run starts with an empty class (in `.data-e2e/`). The classmates' answers are generated with a fixed seed in
 `e2e/students.ts`, so the dashboard looks the same every time.
