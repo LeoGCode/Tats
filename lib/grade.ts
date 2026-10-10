@@ -138,15 +138,15 @@ function gradeText(q: TextQuestion, raw: string): Graded {
 
 function gradeChoice(q: ChoiceQuestion, raw: string): Graded {
   const correct = correctAnswerText(q);
-  const base: Graded = { id: q.id, status: "wrong", points: 0, given: raw, key: raw, correct, why: q.why };
-  if (raw === q.answer) return { ...base, status: "correct", points: 1 };
   const opt = q.options.find((o) => o.key === raw);
-  if (!opt) return { ...base, status: "blank", given: "", key: "(en blanco)" };
+  if (!opt) return { id: q.id, status: "blank", points: 0, given: "", key: "(en blanco)", correct, why: q.why };
   const given = q.section === "D" || q.section === "I" ? `${opt.key}. ${opt.text}` : opt.text;
+  const base: Graded = { id: q.id, status: "wrong", points: 0, given, key: given, correct, why: q.why };
+  if (raw === q.answer) return { ...base, status: "correct", points: 1 };
   const explain = opt.why ?? (q.asks && opt.answers ? `${q.asks} Tu respuesta “${opt.text}” ${opt.answers}.` : undefined);
   const sounds =
     opt.sounds ?? (q.promptEs && opt.es ? `Sonaría así: “${q.promptEs}” — “${opt.es}”` : undefined);
-  return { ...base, given, key: given, title: "Respuesta incorrecta", explain, sounds };
+  return { ...base, title: "Respuesta incorrecta", explain, sounds };
 }
 
 const NUMBERS: Record<string, string> = { "0": "zero", "2": "two", "4": "four", "1": "one", "3": "three" };

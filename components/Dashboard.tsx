@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check, ChevronRight, PencilLine, QrCode, RefreshCw, X } from "lucide-react";
 import { StackedBars } from "./Bars.tsx";
 import { CopyLink, DeleteButton } from "./TeacherTools.tsx";
 
@@ -144,7 +145,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
             </div>
           </div>
           <button className="btn small" onClick={refresh} disabled={refreshing} aria-label="Actualizar">
-            <span className={refreshing ? "spin" : ""}>↻</span> Actualizar
+            <RefreshCw aria-hidden size={16} className={refreshing ? "spin" : ""} /> Actualizar
           </button>
         </div>
         <nav className="tabs" role="tablist">
@@ -176,7 +177,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                 </div>
                 <div className="share-actions">
                   <CopyLink url={data.studentUrl} />
-                  <button className="btn small" onClick={() => setShowQr((v) => !v)}>{showQr ? "Ocultar QR" : "QR"}</button>
+                  <button className="btn small" onClick={() => setShowQr((v) => !v)}><QrCode aria-hidden size={16} /> {showQr ? "Ocultar QR" : "QR"}</button>
                 </div>
               </div>
               {showQr && (
@@ -276,9 +277,13 @@ export default function Dashboard({ data }: { data: DashboardData }) {
                         <span className="sname">{s.name}</span>
                         <span className="small muted nowrap"><Ago iso={s.createdAt} now={now} /></span>
                       </span>
-                      <span className="small muted">✓ {s.correct} · ✎ {s.spelling} · ✗ {s.wrong}</span>
+                      <span className="small muted stats">
+                        <span><Check aria-hidden size={13} /> {s.correct}</span>
+                        <span><PencilLine aria-hidden size={13} /> {s.spelling}</span>
+                        <span><X aria-hidden size={13} /> {s.wrong}</span>
+                      </span>
                     </span>
-                    <span className="chev" aria-hidden>›</span>
+                    <ChevronRight aria-hidden size={20} className="chev" />
                   </a>
                   <DeleteButton id={s.id} name={s.name} teacherKey={data.teacherKey} />
                 </div>
@@ -286,7 +291,7 @@ export default function Dashboard({ data }: { data: DashboardData }) {
             </div>
             {n > 0 && (
               <p className="small muted">
-                ✓ correctas · ✎ ortografía · ✗ incorrectas o en blanco. Toca un estudiante para ver su examen con las explicaciones.
+                <Check aria-hidden size={13} /> correctas · <PencilLine aria-hidden size={13} /> ortografía · <X aria-hidden size={13} /> incorrectas o en blanco. Toca un estudiante para ver su examen con las explicaciones.
               </p>
             )}
           </section>

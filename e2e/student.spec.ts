@@ -9,9 +9,9 @@ test.describe("student", () => {
 
     await test.step("starts the test with their name", async () => {
       await page.goto("/");
-      await expect(page.getByRole("heading", { name: "Midterm Test · Units 1–5" })).toBeVisible();
-      await page.getByPlaceholder("Your name / Tu nombre").pressSequentially(STUDENT, { delay: 40 });
-      await page.getByRole("button", { name: "Start / Empezar →" }).click();
+      await expect(page.getByRole("heading", { name: /Midterm Test/ })).toBeVisible();
+      await page.getByLabel("Your name / Tu nombre").pressSequentially(STUDENT, { delay: 40 });
+      await page.getByRole("button", { name: "Start / Empezar" }).click();
       await expect(page.getByText(`Name: ${STUDENT}`)).toBeVisible();
       await beat(page);
     });
@@ -48,7 +48,7 @@ test.describe("student", () => {
         if (mistakes[i].id === "C1") {
           await testInfo.attach("mistake-C1", { body: await page.screenshot(), contentType: "image/png" });
         }
-        const next = i < mistakes.length - 1 ? "Siguiente →" : "Terminar ✓";
+        const next = i < mistakes.length - 1 ? "Siguiente" : "Terminar";
         await page.getByRole("button", { name: next }).click();
       }
       const all = seen.join("\n");

@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes } from "react";
 import { useRouter } from "next/navigation";
 import { QUESTIONS, SECTIONS, type ChoiceQuestion, type Question } from "@/lib/exam.ts";
+import { ArrowRight, Send, Snail, Volume2 } from "lucide-react";
 import { Figure } from "./Figures.tsx";
 
 const DRAFT_KEY = "midterm-draft-v1";
@@ -24,10 +25,14 @@ function speak(text: string, rate: number) {
 
 function Listen({ text }: { text: string }) {
   return (
-    <span style={{ display: "inline-flex", gap: 6 }}>
-      <button type="button" className="btn small" onClick={() => speak(text, 0.9)} aria-label="Escuchar">🔊 Listen</button>
-      <button type="button" className="btn small" onClick={() => speak(text, 0.6)} aria-label="Escuchar despacio">🐢 Slow</button>
-    </span>
+    <div className="listen">
+      <button type="button" className="btn listen-btn" onClick={() => speak(text, 0.9)} aria-label="Escuchar">
+        <Volume2 aria-hidden size={18} /> Listen
+      </button>
+      <button type="button" className="btn listen-btn" onClick={() => speak(text, 0.6)} aria-label="Escuchar despacio">
+        <Snail aria-hidden size={18} /> Slow
+      </button>
+    </div>
   );
 }
 
@@ -63,63 +68,79 @@ function PlainInput(props: InputHTMLAttributes<HTMLInputElement>) {
   );
 }
 
+/** Text after a blank: no space before punctuation ("?", ".", ", Mrs. Uchida"). */
+const joinAfter = (after: string) => (/^[.,?!]/.test(after) ? after : ` ${after}`);
+
 function QuestionInput({ q, value, onChange }: { q: Question; value: string; onChange: (v: string) => void }) {
-  if (q.kind === "text") {
-    const long = q.section === "J";
-    return (
-      <div className="q">
-        <div className="q-line">
-          <span className="num">{q.num}.</span>
-          {q.speak && <Listen text={q.speak} />}
-          {q.before && <span>{q.before}</span>}
-          <span style={{ display: "inline-flex", flexDirection: "column" }}>
-            <PlainInput
-              className={`blank${long ? " long" : ""}`}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              aria-label={`Question ${q.section}${q.num}`}
-            />
-            {q.hint && <span className="hint">({q.hint})</span>}
-          </span>
-          {q.after && <span>{q.after}</span>}
-        </div>
-      </div>
-    );
-  }
-  if (q.kind === "sentence") {
-    return (
-      <div className="q">
-        <div className="q-line" style={{ marginBottom: 6 }}>
-          <span className="num">{q.num}.</span>
-          <span>{q.prompt}</span>
-        </div>
-        <PlainInput
-          className="sentence"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="Write a complete sentence."
-          aria-label={`Question ${q.section}${q.num}`}
-        />
-      </div>
-    );
-  }
-  const showKey = q.section === "D" || q.section === "I" || q.section === "E";
+  const label = `Question ${q.section}${q.num}`;
   return (
     <div className="q">
-      <div className="q-line">
-        <span className="num">{q.num}.</span>
-        {q.speak ? <Listen text={q.speak} /> : <span>{q.prompt}</span>}
+      <span className="num" aria-hidden>{q.num}</span>
+      <div className="q-body">
+        {q.speak && <Listen text={q.speak} />}
+
+        {q.kind === "text" && (
+          <>
+            {/* The blank sits inside the sentence, like the printed test. */}
+            <p className="sentence-line">
+              {q.before && `${q.before} `}
+              <PlainInput
+                className={`blank${q.section === "J" ? " long" : ""}`}
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                aria-label={label}
+              />
+              {q.after && joinAfter(q.after)}
+            </p>
+            {q.hint && (
+              <p className="hint">
+                {q.hint.split(" / ").map((h, i) => (
+                  <span key={h}>{i > 0 && <span className="hint-sep">or</span>}<b>{h}</b></span>
+                ))}
+              </p>
+            )}
+          </>
+        )}
+
+        {q.kind === "sentence" && (
+          <>
+            <p className="prompt">{q.prompt}</p>
+            <PlainInput
+              className="blank full"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Write a complete sentence."
+              aria-label={label}
+            />
+          </>
+        )}
+
+        {q.kind === "choice" && <Choices q={q} value={value} onChange={onChange} />}
       </div>
-      <div className={`options${["E", "F"].includes(q.section) ? " row" : q.section === "D" ? " letters" : ""}`} role="radiogroup">
+    </div>
+  );
+}
+
+function Choices({ q, value, onChange }: { q: ChoiceQuestion; value: string; onChange: (v: string) => void }) {
+  // D: pick a letter from the list above. F: Yes / No. Others: full options with their letter.
+  const variant = q.section === "D" ? "letters" : q.section === "F" ? "yesno" : "list";
+  const picked = q.options.find((o) => o.key === value);
+  return (
+    <>
+      {!q.speak && <p className="prompt">{q.prompt}</p>}
+      <div className={`choices ${variant}`} role="radiogroup" aria-label={`Question ${q.section}${q.num}`}>
         {q.options.map((o) => (
-          <label key={o.key} className="opt">
-            <input type="radio" name={q.id} value={o.key} checked={value === o.key} onChange={() => onChange(o.key)} />
-            {/* Section D lists the answers once above; each question only picks a letter. */}
-            <span>{q.section === "D" ? <b>{o.key}</b> : <>{showKey && <b>{o.key}. </b>}{o.text}</>}</span>
+          <label key={o.key} className="choice">
+            <input type="radio" className="choice-input" name={q.id} value={o.key} checked={value === o.key} onChange={() => onChange(o.key)} />
+            {variant !== "yesno" && <span className="key">{o.key}</span>}
+            {variant !== "letters" && <span className="choice-text">{o.text}</span>}
           </label>
         ))}
       </div>
-    </div>
+      {variant === "letters" && picked && (
+        <p className="picked"><ArrowRight aria-hidden size={14} /> {picked.text}</p>
+      )}
+    </>
   );
 }
 
@@ -173,74 +194,89 @@ export default function Exam() {
 
   if (!started) {
     return (
-      <div className="wrap">
-        <h1>Midterm Test · Units 1–5</h1>
-        <p className="sub">Ventures Level 1</p>
-        <div className="card">
-          <h2>Welcome! / ¡Bienvenido(a)!</h2>
-          <p>
-            Answer all the questions. At the end you will see your score and an explanation in Spanish for every mistake.
-          </p>
-          <p className="es">
-            Contesta todas las preguntas. Al final verás tu calificación y una explicación en español de cada error. En las
-            secciones de Listening, presiona 🔊 para escuchar (usa audífonos).
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (name.trim()) setStarted(true);
-            }}
-            style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 16 }}
-          >
-            <input type="text" placeholder="Your name / Tu nombre" value={name} onChange={(e) => setName(e.target.value)} style={{ flex: "1 1 220px" }} autoFocus />
-            <button className="btn primary" disabled={!name.trim()}>Start / Empezar →</button>
-          </form>
-        </div>
-      </div>
+      <main className="wrap start">
+        <h1 className="display">Midterm Test<br />Units 1–5</h1>
+        <p className="lead">
+          50 questions: listening, grammar, reading and writing. When you finish, you&apos;ll see your score and an
+          explanation in Spanish for every mistake.
+        </p>
+        <p className="es">
+          50 preguntas. Al terminar verás tu calificación y una explicación en español de cada error. En Listening, toca
+          <span className="inline-icon"><Volume2 aria-hidden size={16} /> Listen</span> para escuchar (usa audífonos).
+        </p>
+        <form
+          className="start-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (name.trim()) setStarted(true);
+          }}
+        >
+          <label className="field-label" htmlFor="student-name">Your name / Tu nombre</label>
+          <input
+            id="student-name"
+            type="text"
+            className="field"
+            placeholder="e.g. María López"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            autoComplete="name"
+            autoFocus
+          />
+          <button className="btn primary big" disabled={!name.trim()}>
+            Start / Empezar <ArrowRight aria-hidden size={18} />
+          </button>
+        </form>
+      </main>
     );
   }
 
   return (
     <>
-      <div className="wrap">
-        <h1>Midterm Test · Units 1–5</h1>
-        <p className="sub">Name: <b>{name}</b></p>
+      <main className="wrap exam">
+        <header className="exam-head">
+          <h1 className="display small-display">Midterm Test · Units 1–5</h1>
+          <p className="muted">Name: <b className="ink">{name}</b></p>
+        </header>
         {SECTIONS.map((s) => (
-          <section key={s.id} className="card" id={`section-${s.id}`}>
-            <div className="section-head">
-              <span className="badge">{s.id}</span>
+          <section key={s.id} className="section" id={`section-${s.id}`} aria-labelledby={`title-${s.id}`}>
+            <header className="section-head">
+              <span className="badge" aria-hidden>{s.id}</span>
               <div>
-                <h2>{s.title}</h2>
-                <div><b>{s.instructions}</b></div>
-                <div className="es">{s.instructionsEs}</div>
+                <h2 id={`title-${s.id}`}>{s.title}</h2>
+                <p className="instructions">{s.instructions}</p>
+                <p className="es">{s.instructionsEs}</p>
               </div>
-            </div>
+            </header>
             {s.wordBank && (
-              <div className="bank">
+              <div className="bank" aria-label="Word box">
                 {s.wordBank.map((w) => <span key={w} className="chip">{w}</span>)}
               </div>
             )}
-            {s.id === "G" && <p className="small muted" style={{ margin: "0 0 4px" }}>A note to the teacher, Mrs. Spencer, from Mrs. Uchida.</p>}
+            {s.id === "G" && <p className="small muted">A note to the teacher, Mrs. Spencer, from Mrs. Uchida.</p>}
             {s.id === "D" && (
-              <div className="bank" style={{ display: "grid", gap: 4 }}>
+              <ol className="answer-list" aria-label="Answers">
                 {(QUESTIONS.find((q) => q.id === "D1") as ChoiceQuestion).options.map((o) => (
-                  <span key={o.key}><b>{o.key}.</b> {o.text}</span>
+                  <li key={o.key}><span className="key">{o.key}</span>{o.text}</li>
                 ))}
-              </div>
+              </ol>
             )}
             <Figure kind={s.figure} />
-            {QUESTIONS.filter((q) => q.section === s.id).map((q) => (
-              <QuestionInput key={q.id} q={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} />
-            ))}
+            <div className="questions">
+              {QUESTIONS.filter((q) => q.section === s.id).map((q) => (
+                <QuestionInput key={q.id} q={q} value={answers[q.id] ?? ""} onChange={(v) => setAnswers((a) => ({ ...a, [q.id]: v }))} />
+              ))}
+            </div>
           </section>
         ))}
-        {error && <div className="notice">{error}</div>}
-      </div>
+        {error && <div className="notice" role="alert">{error}</div>}
+      </main>
       <div className="sticky-bar">
         <div className="inner">
-          <span className="small">{answered}/{QUESTIONS.length}</span>
-          <div className="progress"><div style={{ width: `${(answered / QUESTIONS.length) * 100}%` }} /></div>
-          <button className="btn primary" onClick={submit} disabled={sending}>{sending ? "Enviando…" : "Finish / Entregar"}</button>
+          <span className="count" aria-label={`${answered} of ${QUESTIONS.length} answered`}>{answered}/{QUESTIONS.length}</span>
+          <div className="progress" aria-hidden><div style={{ width: `${(answered / QUESTIONS.length) * 100}%` }} /></div>
+          <button className="btn primary" onClick={submit} disabled={sending}>
+            {sending ? "Enviando…" : "Finish / Entregar"} {!sending && <Send aria-hidden size={16} />}
+          </button>
         </div>
       </div>
     </>

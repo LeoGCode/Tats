@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowLeft, ArrowRight, Check, CircleCheck, CircleX, Languages, PencilLine, X } from "lucide-react";
 import { QUESTION_BY_ID, SECTIONS, questionText } from "@/lib/exam.ts";
 import type { Graded, Result, Status } from "@/lib/grade.ts";
 
@@ -32,19 +33,19 @@ function MistakeCard({ g }: { g: Graded }) {
       </div>
       {g.explain && (
         <div className="box explain">
-          <b>❌ ¿Por qué está mal?</b>
+          <b><CircleX aria-hidden size={18} /> ¿Por qué está mal?</b>
           {g.explain}
         </div>
       )}
       {g.sounds && (
         <div className="box sounds">
-          <b>🗣️ Así sonaría en español</b>
+          <b><Languages aria-hidden size={18} /> Así sonaría en español</b>
           {g.sounds}
         </div>
       )}
       {g.why && (
         <div className="box why">
-          <b>✅ La respuesta correcta</b>
+          <b><CircleCheck aria-hidden size={18} /> La respuesta correcta</b>
           {g.why}
         </div>
       )}
@@ -70,11 +71,11 @@ export default function Review({ name, result }: { name: string; result: Result 
         </div>
         <MistakeCard g={mistakes[step]} />
         <div className="stepper">
-          <button className="btn" onClick={() => setStep(step - 1)} disabled={step === 0}>← Anterior</button>
+          <button className="btn" onClick={() => setStep(step - 1)} disabled={step === 0}><ArrowLeft aria-hidden size={16} /> Anterior</button>
           {step < mistakes.length - 1 ? (
-            <button className="btn primary" onClick={() => setStep(step + 1)}>Siguiente →</button>
+            <button className="btn primary" onClick={() => setStep(step + 1)}>Siguiente <ArrowRight aria-hidden size={16} /></button>
           ) : (
-            <button className="btn primary" onClick={() => setStep(-1)}>Terminar ✓</button>
+            <button className="btn primary" onClick={() => setStep(-1)}>Terminar <Check aria-hidden size={16} /></button>
           )}
         </div>
       </div>
@@ -91,10 +92,10 @@ export default function Review({ name, result }: { name: string; result: Result 
           <div className="muted">{result.score} de {result.total} puntos</div>
         </div>
         <div className="pills">
-          <span className="pill correct">✓ {result.counts.correct} correctas</span>
-          <span className="pill spelling">✎ {result.counts.spelling} ortografía (½ punto)</span>
-          <span className="pill wrong">✗ {result.counts.wrong} incorrectas</span>
-          {result.counts.blank > 0 && <span className="pill blank">○ {result.counts.blank} en blanco</span>}
+          <span className="pill correct"><Check aria-hidden size={14} /> {result.counts.correct} correctas</span>
+          <span className="pill spelling"><PencilLine aria-hidden size={14} /> {result.counts.spelling} ortografía (½ punto)</span>
+          <span className="pill wrong"><X aria-hidden size={14} /> {result.counts.wrong} incorrectas</span>
+          {result.counts.blank > 0 && <span className="pill blank">{result.counts.blank} en blanco</span>}
         </div>
       </div>
 
@@ -102,10 +103,10 @@ export default function Review({ name, result }: { name: string; result: Result 
         <div className="card">
           <h2>Vamos a revisar tus errores</h2>
           <p className="muted">Uno por uno, con la explicación en español.</p>
-          <button className="btn primary" onClick={() => setStep(0)}>Empezar la revisión ({mistakes.length}) →</button>
+          <button className="btn primary" onClick={() => setStep(0)}>Empezar la revisión ({mistakes.length}) <ArrowRight aria-hidden size={16} /></button>
         </div>
       ) : (
-        <div className="card"><h2>¡Perfecto! 🎉</h2><p>No tuviste ningún error.</p></div>
+        <div className="card"><h2>¡Perfecto!</h2><p>No tuviste ningún error.</p></div>
       )}
 
       {tips.length > 0 && (

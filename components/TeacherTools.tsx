@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check, Copy, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export function CopyLink({ url }: { url: string }) {
@@ -18,7 +19,7 @@ export function CopyLink({ url }: { url: string }) {
         }
       }}
     >
-      {done ? "¡Copiado!" : "Copiar"}
+      {done ? <Check aria-hidden size={16} /> : <Copy aria-hidden size={16} />} {done ? "¡Copiado!" : "Copiar"}
     </button>
   );
 }
@@ -40,7 +41,7 @@ export function DeleteButton({ id, name, teacherKey }: { id: string; name: strin
         router.refresh();
       }}
     >
-      🗑
+      <Trash2 aria-hidden size={16} />
     </button>
   );
 }
