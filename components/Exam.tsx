@@ -56,6 +56,8 @@ function PlainInput(props: InputHTMLAttributes<HTMLInputElement>) {
       data-lpignore="true"
       data-1p-ignore="true"
       data-form-type="other"
+      // Turns off inline (grey) predictions in Safari 18+ and Chrome 124+; not in React's types yet.
+      {...{ writingsuggestions: "false" }}
       {...props}
     />
   );
