@@ -9,6 +9,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Midterm Test — Ventures 1",
   description: "Ventures Level 1 midterm (Units 1–5) with feedback in Spanish.",
+  // An English test must never be auto-translated into Spanish by the browser.
+  other: { google: "notranslate" },
 };
 
 export const viewport: Viewport = {
@@ -23,7 +25,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" translate="no">
       <body>{children}</body>
     </html>
   );

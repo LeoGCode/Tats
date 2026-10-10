@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type InputHTMLAttributes } from "react";
 import { useRouter } from "next/navigation";
 import { QUESTIONS, SECTIONS, type ChoiceQuestion, type Question } from "@/lib/exam.ts";
-import { ArrowRight, Send, Snail, Volume2 } from "lucide-react";
+import { ArrowRight, LoaderCircle, Send, Snail, Volume2 } from "lucide-react";
 import { Figure } from "./Figures.tsx";
 
 const DRAFT_KEY = "midterm-draft-v1";
@@ -109,7 +109,7 @@ function QuestionInput({ q, value, onChange }: { q: Question; value: string; onC
               className="blank full"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder="Write a complete sentence."
+              placeholder="Write a complete sentence…"
               aria-label={label}
             />
           </>
@@ -220,7 +220,6 @@ export default function Exam() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoComplete="name"
-            autoFocus
           />
           <button className="btn primary big" disabled={!name.trim()}>
             Start / Empezar <ArrowRight aria-hidden size={18} />
@@ -275,7 +274,7 @@ export default function Exam() {
           <span className="count" aria-label={`${answered} of ${QUESTIONS.length} answered`}>{answered}/{QUESTIONS.length}</span>
           <div className="progress" aria-hidden><div style={{ width: `${(answered / QUESTIONS.length) * 100}%` }} /></div>
           <button className="btn primary" onClick={submit} disabled={sending}>
-            {sending ? "Enviando…" : "Finish / Entregar"} {!sending && <Send aria-hidden size={16} />}
+            {sending ? <><LoaderCircle aria-hidden size={16} className="spin" /> Enviando…</> : <>Finish / Entregar <Send aria-hidden size={16} /></>}
           </button>
         </div>
       </div>
