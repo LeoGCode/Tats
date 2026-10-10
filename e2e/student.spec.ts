@@ -71,8 +71,10 @@ test.describe("student", () => {
     await page.getByLabel("Question A2", { exact: true }).fill("dictionary");
     await page.getByRole("button", { name: "Finish / Entregar" }).click();
     await expect(page.locator(".sticky-bar")).toContainText("Te faltan 49 preguntas");
+    await beat(page, 2500);
     await page.getByRole("button", { name: "Ir a la primera" }).click();
     await expect(page.getByLabel("Question A1", { exact: true })).toBeFocused();
+    await beat(page, 2000);
     await expect(page.locator(".sticky-bar")).toContainText("1/50");
   });
 });
